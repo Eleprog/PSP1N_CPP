@@ -38,19 +38,38 @@ private:
 	}
 };
 
+class DataPSP
+{
+public:
+	DataPSP(byte* data, uint16_t sizeData) {
+		this->data = data;
+		this->sizeData = sizeData;
+	}
+	uint16_t getSize() {
+		return sizeData;
+	}
+	byte* getData() {
+		return data;
+	}
+
+private:
+	byte* data;
+	uint16_t sizeData;
+};
+
 //Data packet
 class PackagePSP
 {
 public:
 	//Package data
-	uint32_t getItemValue(int itemIndex) {
-		return item[itemIndex].getValue();
+	uint32_t getItemValue(uint16_t itemIndex) {
+		return item[itemIndexCheck(itemIndex)].getValue();
 	}
-	void setItemValue(int itemIndex, uint32_t value) {
-		item[itemIndex].setValue(value);
+	void setItemValue(uint16_t itemIndex, uint32_t value) {
+		item[itemIndexCheck(itemIndex)].setValue(value);
 	}
-	byte getItemSize(int itemIndex) {
-		return item[itemIndex].getSize();
+	byte getItemSize(uint16_t itemIndex) {
+		return item[itemIndexCheck(itemIndex)].getSize();
 	}
 	//The amount of data in the package
 	uint16_t getItemCount() {
@@ -61,7 +80,7 @@ public:
 		return startBit;
 	}
 
-	void encode() {
+	DataPSP encode() {
 		clearCodedBytes();
 		int positionPush = 0;
 
@@ -77,12 +96,12 @@ public:
 				byte freeBits = DATA_BITS - x; //свободных бит в текущем байте
 				byte offsetRight = item[i].getSize() - size; //смещение вправо
 
-				codedBytes[y] |= (byte)(item[i].getValue() >> offsetRight << x);
+				buffer[y] |= (byte)(item[i].getValue() >> offsetRight << x);
 				size -= freeBits;
 
 				if (getStartBit() == ONE)
-					codedBytes[y] &= ~(1 << 7);
-				else codedBytes[y] |= 1 << 7;
+					buffer[y] &= ~(1 << 7);
+				else buffer[y] |= 1 << 7;
 
 				if (size <= 0)
 				{
@@ -96,9 +115,11 @@ public:
 			}
 
 			if (getStartBit() == ZERO)
-				codedBytes[0] &= ~(1 << 7);
-			else codedBytes[0] |= 1 << 7;
+				buffer[0] &= ~(1 << 7);
+			else buffer[0] |= 1 << 7;
 		}
+		DataPSP dataPSP(buffer, sizeCodedBytes);
+		return dataPSP;
 	}
 
 	/*Decode package
@@ -108,9 +129,9 @@ public:
 		RETURN - result package decode*/
 	bool decode(int dataByte) {		
 		if (dataByte == -1) return false;
-		codedBytes[countData] = dataByte;
-		if (codedBytes[countData] & (1 << 7) == getStartBit()) {
-			codedBytes[0] = codedBytes[countData];
+		buffer[countData] = dataByte;
+		if (buffer[countData] & (1 << 7) == getStartBit()) {
+			buffer[0] = buffer[countData];
 			countData = 1;
 			return false;
 		}
@@ -128,7 +149,7 @@ public:
 					uint16_t y = position / DATA_BITS;
 					int freeBits = 8 - (x + size); //свободных бит в текущем байте
 					if (freeBits <= 0) freeBits = 1;
-					byte temp = codedBytes[y] << freeBits;
+					byte temp = buffer[y] << freeBits;
 					uint32_t temp2 = temp >> (freeBits + x);
 					item[i].setValue(item[i].getValue() | (temp2 << (item[i].getSize() - size)));
 
@@ -149,16 +170,16 @@ public:
 	PackagePSP() {}
 
 	template <uint16_t sizeMatrix, uint16_t sizeCodedBytes>
-	PackagePSP(StartBit startBit, StructurePackagePSP(&dataUnits)[sizeMatrix], byte(&codedBytes)[sizeCodedBytes]) {
-		init(startBit, dataUnits, codedBytes);
+	PackagePSP(StartBit startBit, StructurePackagePSP(&dataUnits)[sizeMatrix], byte(&buffer)[sizeCodedBytes]) {
+		init(startBit, dataUnits, buffer);
 	}
 
 	template <uint16_t sizeMatrix, uint16_t sizeCodedBytes>
-	void init(StartBit startBit, StructurePackagePSP(&dataUnits)[sizeMatrix], byte(&codedBytes)[sizeCodedBytes]) {
+	void init(StartBit startBit, StructurePackagePSP(&dataUnits)[sizeMatrix], byte(&buffer)[sizeCodedBytes]) {
 		this->startBit = startBit;
 		this->item = dataUnits;
 		this->itemCount = sizeMatrix;
-		this->codedBytes = codedBytes;
+		this->buffer = buffer;
 		this->sizeCodedBytes = sizeCodedBytes;
 	}
 private:
@@ -166,15 +187,25 @@ private:
 	StartBit startBit;
 	StructurePackagePSP* item;
 	uint16_t countData = 0;
-	byte* codedBytes;
-	uint16_t sizeCodedBytes;
+	byte* buffer;
+	uint16_t sizeCodedBytes;	
 	void clearCodedBytes() {
 		for (size_t i = 0; i < sizeCodedBytes; i++)
 		{
-			codedBytes[i] = 0;
+			buffer[i] = 0;
 		}
 	}
+	uint16_t itemIndexCheck(uint16_t itemIndex) {
+		if (itemIndex >= getItemCount())
+		{
+			itemIndex = getItemCount() - 1;
+		}
+		return itemIndex;
+	}
 };
+
+
+
 
 #endif
 

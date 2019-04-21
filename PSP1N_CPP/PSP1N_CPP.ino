@@ -2,53 +2,46 @@
 
 
 #define SIZE_ARRAYBYTES 6
-StructurePackagePSP dataTransmit[] = {
-	30,
-	10
-};
+StructurePackagePSP structureTransmit[] = { 30,	10 };
 byte bufferTransmit[SIZE_ARRAYBYTES];
-PackagePSP packTransmit(StartBit::ZERO, dataTransmit, bufferTransmit);
+PackagePSP packTransmit(StartBit::ZERO, structureTransmit, bufferTransmit);
 
-StructurePackagePSP dataRecieve[] = {
-	30,
-	10
-};
+StructurePackagePSP structureRecieve[] = { 30,	10 };
 byte bufferRecieve[SIZE_ARRAYBYTES];
-PackagePSP packRecieve(StartBit::ZERO, dataRecieve, bufferRecieve);
+PackagePSP packRecieve(StartBit::ZERO, structureRecieve, bufferRecieve);
 
-
+byte bufferData[SIZE_ARRAYBYTES];
 
 void setup() {
 	Serial.begin(250000);
 	//7, 1023
-	bufferRecieve[0] = 0b00000111;
-	bufferRecieve[1] = 0b10000000;
-	bufferRecieve[2] = 0b10000000;
-	bufferRecieve[3] = 0b10000000;
-	bufferRecieve[4] = 0b11111100;
-	bufferRecieve[5] = 0b10011111;	
+	bufferData[0] = 0b00000111;
+	bufferData[1] = 0b10000000;
+	bufferData[2] = 0b10000000;
+	bufferData[3] = 0b10000000;
+	bufferData[4] = 0b11111100;
+	bufferData[5] = 0b10011111;
 }
-
 
 
 void loop() {
 
 	//Encoding buffer
-	packTransmit.setItemValue(0, millis()/1000);
+	packTransmit.setItemValue(0, millis() / 1000);
 	packTransmit.setItemValue(1, 1023);
-	packTransmit.encode();
+	DataPSP data = packTransmit.encode();
 	Serial.println("Data transmit:");
-	for (size_t i = 0; i < SIZE_ARRAYBYTES; i++)
+	for (size_t i = 0; i < data.getSize(); i++)
 	{
-		Serial.println(bufferTransmit[i], 2);
+		Serial.println(data.getData()[i], 2);
 	}
 	Serial.println("===Data transmit end===\n");
 
 
 	//Decoding buffer
-	Serial.println("Decoding buffer:");	
+	Serial.println("Decoding buffer:");
 	int counter = 0;
-	while (!packRecieve.decode(bufferRecieve[counter])) {
+	while (!packRecieve.decode(bufferData[counter])) {
 		counter++;
 	}
 	Serial.println(packRecieve.getItemValue(0));
