@@ -17,12 +17,16 @@ typedef enum StartBit
 }StartBit;
 
 //Data unit
-struct DataUnit
+struct StructurePackagePSP
 {
-	DataUnit(byte size, uint32_t value = 0) {
+	StructurePackagePSP(byte size, uint32_t value = 0) {
 		this->size = size;
 		this->value = value;
-	}
+	}	
+	friend class PackagePSP;
+private:
+	byte size = 0; //data size in bits
+	uint32_t value = 0;
 	byte getSize() {
 		return size;
 	}
@@ -32,9 +36,6 @@ struct DataUnit
 	uint32_t getValue() {
 		return value;
 	}
-private:
-	byte size = 0; //data size in bits
-	uint32_t value = 0;
 };
 
 //Data packet
@@ -148,12 +149,12 @@ public:
 	PackagePSP() {}
 
 	template <uint16_t sizeMatrix, uint16_t sizeCodedBytes>
-	PackagePSP(StartBit startBit, DataUnit(&dataUnits)[sizeMatrix], byte(&codedBytes)[sizeCodedBytes]) {
+	PackagePSP(StartBit startBit, StructurePackagePSP(&dataUnits)[sizeMatrix], byte(&codedBytes)[sizeCodedBytes]) {
 		init(startBit, dataUnits, codedBytes);
 	}
 
 	template <uint16_t sizeMatrix, uint16_t sizeCodedBytes>
-	void init(StartBit startBit, DataUnit(&dataUnits)[sizeMatrix], byte(&codedBytes)[sizeCodedBytes]) {
+	void init(StartBit startBit, StructurePackagePSP(&dataUnits)[sizeMatrix], byte(&codedBytes)[sizeCodedBytes]) {
 		this->startBit = startBit;
 		this->item = dataUnits;
 		this->itemCount = sizeMatrix;
@@ -163,7 +164,7 @@ public:
 private:
 	uint16_t itemCount;
 	StartBit startBit;
-	DataUnit* item;
+	StructurePackagePSP* item;
 	uint16_t countData = 0;
 	byte* codedBytes;
 	uint16_t sizeCodedBytes;

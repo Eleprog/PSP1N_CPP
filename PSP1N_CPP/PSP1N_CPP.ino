@@ -2,14 +2,14 @@
 
 
 #define SIZE_ARRAYBYTES 6
-DataUnit dataTransmit[] = {
+StructurePackagePSP dataTransmit[] = {
 	30,
 	10
 };
 byte bufferTransmit[SIZE_ARRAYBYTES];
 PackagePSP packTransmit(StartBit::ZERO, dataTransmit, bufferTransmit);
 
-DataUnit dataRecieve[] = {
+StructurePackagePSP dataRecieve[] = {
 	30,
 	10
 };
@@ -26,10 +26,10 @@ void setup() {
 	bufferRecieve[2] = 0b10000000;
 	bufferRecieve[3] = 0b10000000;
 	bufferRecieve[4] = 0b11111100;
-	bufferRecieve[5] = 0b10011111;
+	bufferRecieve[5] = 0b10011111;	
 }
 
-int counter = 0;
+
 
 void loop() {
 
@@ -47,10 +47,10 @@ void loop() {
 
 	//Decoding buffer
 	Serial.println("Decoding buffer:");	
+	int counter = 0;
 	while (!packRecieve.decode(bufferRecieve[counter])) {
 		counter++;
 	}
-	counter = 0;
 	Serial.println(packRecieve.getItemValue(0));
 	Serial.println(packRecieve.getItemValue(1));
 	Serial.println("===End recieve===\n");
