@@ -16,6 +16,12 @@ typedef enum StartBit
 	ONE
 }StartBit;
 
+typedef enum ResultDecode {
+	END,
+	DECODE_OK,
+	NOT_DECODE
+}ResultDecode;
+
 //Data unit
 struct StructurePackagePSP
 {
@@ -127,13 +133,13 @@ public:
 		packagePSP - put the result of decoding data bytes
 		matrix - intermediate byte array
 		RETURN - result package decode*/
-	bool decode(int dataByte) {		
-		if (dataByte == -1) return false;
+	ResultDecode decode(int dataByte) {		
+		if (dataByte == -1) return ResultDecode::END;
 		buffer[countData] = dataByte;
 		if (buffer[countData] & (1 << 7) == getStartBit()) {
 			buffer[0] = buffer[countData];
 			countData = 1;
-			return false;
+			return ResultDecode::NOT_DECODE;
 		}
 		countData++;
 		if (countData >= sizeCodedBytes)
@@ -161,9 +167,9 @@ public:
 				}
 			}
 			countData = 0;
-			return true;
+			return ResultDecode::DECODE_OK;
 		}
-		return false;
+		return ResultDecode::NOT_DECODE;
 	}
 
 	//Constructor

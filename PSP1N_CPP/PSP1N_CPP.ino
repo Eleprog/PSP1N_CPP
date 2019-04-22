@@ -41,7 +41,7 @@ void loop() {
 	//Decoding buffer
 	Serial.println("Decoding buffer:");
 	int counter = 0;
-	while (!packRecieve.decode(bufferData[counter])) {
+	while (packRecieve.decode(bufferData[counter])!=ResultDecode::DECODE_OK) {
 		counter++;
 	}
 	Serial.println(packRecieve.getItemValue(0));
